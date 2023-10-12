@@ -11,7 +11,7 @@ import pl.master.test.library.model.dto.ClientDto;
 @Builder
 @Entity
 public class Book {
-//    autora, tytuł, kategorie
+
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)

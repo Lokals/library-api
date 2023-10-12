@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog https://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.5.xsd">
+
+    <changeSet id="0001" author="mk">
+
+        <!-- 1. client table creation -->
+        <createTable tableName="client">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="first_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="last_name" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="email" type="varchar(255)">
+                <constraints nullable="false" unique="true"/>
+            </column>
+            <column name="enabled" type="boolean" defaultValueBoolean="false">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- 2. book table creation with FK reference to client -->
+        <createTable tableName="book">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="author" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="title" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="category" type="varchar(255)">
+                <constraints nullable="true"/>
+            </column>
+            <column name="client_id" type="int">
+                <constraints nullable="true" foreignKeyName="fk_client_id" referencedTableName="client" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+        <!-- 3. client_subscription_category table creation with FK reference to client -->
+        <createTable tableName="client_subscription_category">
+            <column name="client_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_client_subscription_category_client_id" referencedTableName="client" referencedColumnNames="id"/>
+            </column>
+            <column name="category_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- 4. client_subscription_author table creation with FK reference to client -->
+        <createTable tableName="client_subscription_author">
+            <column name="client_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_client_subscription_author_client_id" referencedTableName="client" referencedColumnNames="id"/>
+            </column>
+            <column name="author_name" type="varchar(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <!-- 5. confirmation_token table creation with FK reference to client -->
+        <createTable tableName="confirmation_token">
+            <column name="id" type="int" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="token" type="varchar(255)">
+                <constraints nullable="true" unique="true"/>
+            </column>
+            <column name="client_id" type="int">
+                <constraints nullable="false" foreignKeyName="fk_confirmation_token_client_id" referencedTableName="client" referencedColumnNames="id"/>
+            </column>
+        </createTable>
+
+    </changeSet>
+
+</databaseChangeLog>

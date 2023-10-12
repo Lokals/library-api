@@ -37,7 +37,6 @@ public class LibraryController {
         return bookService.findById(id);
     }
 
-    // TODO: 08/10/2023 Nie dziala bo nie ustawiles debilu klienta
     @GetMapping("/books/{id}/client")
     public ClientDto findClientByBookId(@PathVariable int id){
         return bookService.findClientByBookId(id);

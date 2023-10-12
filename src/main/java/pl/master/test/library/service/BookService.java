@@ -23,8 +23,5 @@ public interface BookService {
 
     BookDto remove(int id);
 
-    Set<String> getAllCategories();
-    Set<String> getAllAuthors();
-
     Book getBookById(int id);
 }

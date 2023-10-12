@@ -90,16 +90,6 @@ public class BookServiceImpl implements BookService{
     }
 
     @Override
-    public Set<String> getAllCategories() {
-        return bookRepository.findDistinctCategories();
-    }
-
-    @Override
-    public Set<String> getAllAuthors() {
-        return bookRepository.findDistinctAuthors();
-    }
-
-    @Override
     public Book getBookById(int id) {
         return bookRepository.findById(id).orElseThrow(
                 () -> new EntityNotFoundException(MessageFormat
