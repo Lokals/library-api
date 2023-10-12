@@ -26,14 +26,11 @@ public class LibraryController {
     private final BookService bookService;
     private final ClientService clientService;
     private final ConfirmationTokenRepository confirmationTokenRepository;
-//- rejestrowania klientow z potwierdzeniem adresu email.
-//- dodawanie ksiazki
-//- tworzenie/anulowanie subksyrbcji ksiazek.
+
     @GetMapping("/books")
     public List<BookDto> findAllBooks(){
         return bookService.findAll();
     }
-
 
     @GetMapping("/books/{id}")
     public BookDto findBookById(@PathVariable int id){
@@ -46,18 +43,6 @@ public class LibraryController {
         return bookService.findClientByBookId(id);
     }
 
-    @DeleteMapping("/books/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public BookDto deleteBook(@PathVariable int id) {
-        return bookService.remove(id);
-    }
-
-    @DeleteMapping("/books/{bookId}/deleteClient/{clientId}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public BookDto deleteKidPresent(@PathVariable int bookId, @PathVariable int clientId) {
-//        return bookService.removePresent(bookId, clientId);
-        return null;
-    }
 
     @PostMapping("/books")
     @ResponseStatus(HttpStatus.CREATED)
@@ -65,10 +50,6 @@ public class LibraryController {
         return bookService.save(command);
     }
 
-    @PatchMapping("/books/{id}")
-    public BookDto updateBook(@PathVariable int id, @RequestBody @Valid UpdateBookCommand command) {
-        return bookService.updateBook(id, command);
-    }
 
     @GetMapping("/clients")
     public List<ClientDto> findAllClients(){
@@ -80,22 +61,10 @@ public class LibraryController {
         return clientService.findById(id);
     }
 
-    @DeleteMapping("/clients/{id}")
-    @ResponseStatus(HttpStatus.NO_CONTENT)
-    public ClientDto deleteClient(@PathVariable int id) {
-        return clientService.remove(id);
-    }
-
-
     @PostMapping("/clients")
     @ResponseStatus(HttpStatus.CREATED)
     public ClientDto saveClient(@RequestBody @Valid CreateClientCommand command) {
         return clientService.save(command);
-    }
-
-    @PatchMapping("/clients/{id}")
-    public ClientDto updateClient(@PathVariable int id, @RequestBody @Valid UpdateClientCommand command) {
-        return clientService.updateClient(id, command);
     }
 
     @PostMapping("/clients/{clientId}/subscriptions/categories")
@@ -130,17 +99,6 @@ public class LibraryController {
         Set<String> authors = clientService.getSubscribedAuthors(clientId);
         return ResponseEntity.ok(authors);
     }
-
-    @GetMapping("/books/subscriptions/authors")
-    public Set<String> getSubscribedAuthors() {
-        return bookService.getAllAuthors();
-    }
-
-    @GetMapping("/books/subscriptions/categories")
-    public Set<String> getSubscribedCategories() {
-        return bookService.getAllCategories();
-    }
-
 
     @GetMapping("/confirm")
     public ResponseEntity confirm(@RequestParam("token") String token) {
