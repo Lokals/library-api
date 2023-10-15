@@ -29,10 +29,7 @@ public class BookServiceImpl implements BookService{
     private final RabbitTemplate rabbitTemplate;
     @Override
     public List<BookDto> findAll() {
-        return bookRepository.findAll()
-                .stream()
-                .map(BookDto::fromEntity)
-                .toList();
+        return bookRepository.findAllBooksAsDto();
     }
 
     @Override

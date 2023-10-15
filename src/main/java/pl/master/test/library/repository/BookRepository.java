@@ -8,6 +8,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 import pl.master.test.library.model.Book;
 import pl.master.test.library.model.Client;
+import pl.master.test.library.model.dto.BookDto;
 
 import java.util.List;
 import java.util.Set;
@@ -34,5 +35,8 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
 
     @Query("SELECT c FROM Client c WHERE :category MEMBER OF c.subscribedCategories")
     Set<Client> findClientsSubscribedToCategory(@Param("category") String category);
+
+    @Query("SELECT NEW pl.master.test.library.model.dto.BookDto(b.id, b.author, b.title, b.category) FROM Book b")
+    List<BookDto> findAllBooksAsDto();
 
 }
