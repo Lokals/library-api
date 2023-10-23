@@ -30,7 +30,6 @@ class RegistrationServiceTest {
                 .firstName("Jehbleh")
                 .email("test@example.com")
                 .build();
-//        when(libraryApiProperties.getBaseUrl()).thenReturn("http://localhost:8080/api/v1");
 
     }
 

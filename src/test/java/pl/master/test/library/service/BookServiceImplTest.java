@@ -113,7 +113,7 @@ class BookServiceImplTest {
 
         BookDto savedBookDto = bookService.save(command);
 
-        verify(bookRepository, times(1)).save(any(Book.class)); // Ensure repository's save method was called.
+        verify(bookRepository, times(1)).save(any(Book.class));
         assertEquals(createdBook.getAuthor(), savedBookDto.getAuthor());
     }
 
