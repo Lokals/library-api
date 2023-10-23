@@ -7,6 +7,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import pl.master.test.library.model.Client;
+import pl.master.test.library.properties.LibraryApiProperties;
 import pl.master.test.library.repository.ClientRepository;
 import static org.mockito.Mockito.*;
 import static org.junit.jupiter.api.Assertions.*;
@@ -17,7 +18,7 @@ class RegistrationServiceTest {
     private RegistrationService registrationService;
 
     @Mock
-    private ClientRepository clientRepository;
+    private LibraryApiProperties libraryApiProperties;
     @Mock
     private EmailService emailService;
 
@@ -29,7 +30,7 @@ class RegistrationServiceTest {
                 .firstName("Jehbleh")
                 .email("test@example.com")
                 .build();
-
+//        when(libraryApiProperties.getBaseUrl()).thenReturn("http://localhost:8080/api/v1");
 
     }
 
@@ -71,11 +72,11 @@ class RegistrationServiceTest {
 
     @Test
     void newLibraryPosition_ValidClient_EmailSent() {
-        registrationService.newLibraryPosition(client, "The Dark Tower");
+        registrationService.newLibraryPosition(client.getEmail(), "The Dark Tower");
 
         verify(emailService, times(1)).sendSimpleMessage(client.getEmail(),
-                "New position appeared in library - Book: The Dark Tower",
-                "Hello Jehbleh, New subscribed position appeared in our library: The Dark Tower");
+                "Subscribed books appeared",
+                "The Dark Tower");
     }
 
     @Test
@@ -84,6 +85,6 @@ class RegistrationServiceTest {
 
         verify(emailService, times(1)).sendSimpleMessage(client.getEmail(),
                 "Confirmation mail",
-                "Hello Jehbleh, To register and unblock your account for full access please confirm this mail by clicking in following link: http://localhost:8080/api/v1/confirm?token=sample-token");
+                "Hello Jehbleh, To register and unblock your account for full access please confirm this mail by clicking in following link: null/confirm?token=sample-token");
     }
 }

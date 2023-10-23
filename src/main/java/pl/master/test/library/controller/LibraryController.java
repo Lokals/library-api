@@ -37,10 +37,6 @@ public class LibraryController {
         return bookService.findById(id);
     }
 
-    @GetMapping("/books/{id}/client")
-    public ClientDto findClientByBookId(@PathVariable int id){
-        return bookService.findClientByBookId(id);
-    }
 
 
     @PostMapping("/books")

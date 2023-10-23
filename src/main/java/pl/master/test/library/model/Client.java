@@ -22,9 +22,6 @@ public class Client {
     private String email;
     private boolean enabled = false;
 
-    @OneToMany(mappedBy = "client", cascade = CascadeType.ALL, orphanRemoval = false)
-    private Set<Book> books;
-
     @ElementCollection(fetch = FetchType.LAZY)
     @CollectionTable(name = "client_subscription_category",
             joinColumns = @JoinColumn(name = "client_id"))

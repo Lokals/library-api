@@ -19,7 +19,6 @@ public interface ClientService {
     ClientDto save(CreateClientCommand command);
 
     ClientDto updateClient(int id, UpdateClientCommand command);
-    ClientDto remove(int id);
 
     ClientDto subscribeToCategory(int clientId, UpdateClientSubscriptionCategoryCommand command);
 

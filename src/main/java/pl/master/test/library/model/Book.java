@@ -4,6 +4,8 @@ import jakarta.persistence.*;
 import lombok.*;
 import pl.master.test.library.model.dto.ClientDto;
 
+import java.time.LocalDateTime;
+
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -19,7 +21,10 @@ public class Book {
     private String author;
     private String title;
     private String category;
-
-    @ManyToOne
-    private Client client;
+    @Column(name = "CREATED_DATE")
+    private LocalDateTime createdDate;
+    @PrePersist
+    protected void onCreate() {
+        this.createdDate = LocalDateTime.now();
+    }
 }

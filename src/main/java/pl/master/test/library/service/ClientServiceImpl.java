@@ -72,17 +72,6 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     @Transactional
-    public ClientDto remove(int id) {
-        Client client = getClientById(id);
-        if (!client.getBooks().isEmpty()){
-            bookRepository.disassociateBooksFromClient(id);
-        }
-        clientRepository.delete(client);
-        return ClientDto.fromEntity(client);
-    }
-
-    @Override
-    @Transactional
     public ClientDto subscribeToCategory(int clientId, UpdateClientSubscriptionCategoryCommand command) {
         Client client = getClientById(clientId);
         if (!client.isEnabled()){
@@ -92,8 +81,9 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Client do subscribe already that category");
         }
         client.getSubscribedCategories().add(command.getSubscribedCategory());
+        clientRepository.save(client);
         registrationService.subscribeClientToCategory(client, command.getSubscribedCategory());
-        return  ClientDto.fromEntity(clientRepository.save(client));
+        return  ClientDto.fromEntity(client);
     }
 
     @Override
@@ -106,8 +96,9 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Client do not subscribe that category");
         }
         client.getSubscribedCategories().remove(command.getSubscribedCategory());
+        clientRepository.save(client);
         registrationService.unsubscribeClientToCategory(client, command.getSubscribedCategory());
-        return  ClientDto.fromEntity(clientRepository.save(client));
+        return  ClientDto.fromEntity(client);
     }
 
     @Override
@@ -120,8 +111,9 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Client do subscribe already that author");
         }
         client.getSubscribedAuthors().add(command.getSubscribedAuthor());
+        clientRepository.save(client);
         registrationService.subscribeClientToAuthor(client, command.getSubscribedAuthor());
-        return  ClientDto.fromEntity(clientRepository.save(client));
+        return  ClientDto.fromEntity(client);
     }
 
     @Override
@@ -134,8 +126,9 @@ public class ClientServiceImpl implements ClientService {
             throw new IllegalArgumentException("Client do not subscribe that category");
         }
         client.getSubscribedAuthors().remove(command.getSubscribedAuthor());
+        clientRepository.save(client);
         registrationService.unsubscribeClientAuthor(client, command.getSubscribedAuthor());
-        return  ClientDto.fromEntity(clientRepository.save(client));
+        return  ClientDto.fromEntity(client);
     }
 
     @Override

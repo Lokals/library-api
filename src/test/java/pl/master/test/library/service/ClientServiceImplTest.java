@@ -62,25 +62,31 @@ class ClientServiceImplTest {
                 .email("temp@mail.com")
                 .firstName("Jan")
                 .lastName("Kowalski")
-                .books(books)
                 .subscribedAuthors(new HashSet<>())
                 .subscribedCategories(new HashSet<>())
                 .build();
-        book.setClient(client);
     }
 
     @Test
     void findAll_ResultsInClientDtoListBeingReturned() {
-        List<Client> clientsFromRepo = List.of(client);
-        when(clientRepository.findAll()).thenReturn(clientsFromRepo);
+        ClientDto clientDto = ClientDto.builder()
+                .id(client.getId())
+                .firstName(client.getFirstName())
+                .lastName(client.getLastName())
+                .email(client.getEmail())
+                .enabled(client.isEnabled())
+                .build();
+        List<ClientDto> clientsDtoFromRepo = List.of(clientDto);
+
+        when(clientRepository.findAllClientsAsDto()).thenReturn(clientsDtoFromRepo);
 
         List<ClientDto> clientsDtoReturned = clientService.findAll();
 
-        assertEquals(clientsFromRepo.size(), clientsDtoReturned.size());
-        assertEquals(client.getId(), clientsDtoReturned.get(0).getId());
-        assertEquals(client.getEmail(), clientsDtoReturned.get(0).getEmail());
-        assertEquals(client.getFirstName(), clientsDtoReturned.get(0).getFirstName());
-        assertEquals(client.getLastName(), clientsDtoReturned.get(0).getLastName());
+        assertEquals(clientsDtoFromRepo.size(), clientsDtoReturned.size());
+        assertEquals(clientDto.getId(), clientsDtoReturned.get(0).getId());
+        assertEquals(clientDto.getEmail(), clientsDtoReturned.get(0).getEmail());
+        assertEquals(clientDto.getFirstName(), clientsDtoReturned.get(0).getFirstName());
+        assertEquals(clientDto.getLastName(), clientsDtoReturned.get(0).getLastName());
     }
 
     @Test
@@ -128,41 +134,6 @@ class ClientServiceImplTest {
         assertEquals(command.getFirstName(), updatedClient.getFirstName());
         assertEquals(command.getLastName(), updatedClient.getLastName());
         assertEquals(command.getEmail(), updatedClient.getEmail());
-    }
-
-    @Test
-    void remove_ClientWithBooks_ClientBooksDisassociatedAndClientRemoved() {
-        int clientId = 1;
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
-
-        ClientDto removedClient = clientService.remove(clientId);
-
-        verify(bookRepository).disassociateBooksFromClient(clientId);
-        verify(clientRepository).delete(client);
-        assertEquals(client.getId(), removedClient.getId());
-    }
-
-    @Test
-    void remove_ClientWithoutBooks_ClientRemovedWithoutBookDisassociation() {
-        int clientId = 1;
-        client.setBooks(Collections.emptySet());
-        when(clientRepository.findById(clientId)).thenReturn(Optional.of(client));
-
-        ClientDto removedClient = clientService.remove(clientId);
-
-        verify(bookRepository, never()).disassociateBooksFromClient(clientId);
-        verify(clientRepository).delete(client);
-        assertEquals(client.getId(), removedClient.getId());
-    }
-
-    @Test
-    void remove_ClientDoesNotExist_ThrowsEntityNotFoundException() {
-        int clientId = 1;
-        when(clientRepository.findById(clientId)).thenReturn(Optional.empty());
-
-        assertThrows(EntityNotFoundException.class, () -> clientService.remove(clientId));
-        verify(bookRepository, never()).disassociateBooksFromClient(anyInt());
-        verify(clientRepository, never()).delete(any());
     }
 
     @Test

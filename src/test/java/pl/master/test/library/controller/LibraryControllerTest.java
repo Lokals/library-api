@@ -95,7 +95,6 @@ class LibraryControllerTest {
                         .category("Duze")
                         .build()
         );
-        book.setClient(client);
 
     }
 
@@ -130,28 +129,6 @@ class LibraryControllerTest {
     @Test
     void testFindBookById_NoBookFound_Returns404() throws Exception {
         mockMvc.perform(get("/api/v1/books/100")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isNotFound());
-    }
-
-    @Test
-    void testFindClientByBookId_BookHasClient_ResultsInClientBeingReturned() throws Exception {
-        book.setClient(client);
-        bookRepository.save(book);
-
-
-        mockMvc.perform(get("/api/v1/books/" + book.getId() + "/client")
-                        .contentType(MediaType.APPLICATION_JSON))
-                .andExpect(status().isOk())
-                .andExpect(jsonPath("$.firstName").value("Wojtek"))
-                .andExpect(jsonPath("$.lastName").value("Twardziel"))
-                .andExpect(jsonPath("$.email").value("nagrzany@client.com"));
-    }
-
-    @Test
-    void testFindClientByBookId_BookDoNotExist_ResultsIn404NotFound() throws Exception {
-
-        mockMvc.perform(get("/api/v1/books/100/client")
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound());
     }
