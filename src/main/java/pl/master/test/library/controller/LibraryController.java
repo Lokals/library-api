@@ -1,19 +1,23 @@
 package pl.master.test.library.controller;
 
 
+import jakarta.persistence.EntityNotFoundException;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+import pl.master.test.library.model.Client;
 import pl.master.test.library.model.ConfirmationToken;
 import pl.master.test.library.model.command.*;
 import pl.master.test.library.model.dto.BookDto;
 import pl.master.test.library.model.dto.ClientDto;
+import pl.master.test.library.repository.ClientRepository;
 import pl.master.test.library.repository.ConfirmationTokenRepository;
 import pl.master.test.library.service.BookService;
 import pl.master.test.library.service.ClientService;
 
+import java.text.MessageFormat;
 import java.util.List;
 import java.util.Optional;
 import java.util.Set;
@@ -25,18 +29,18 @@ public class LibraryController {
 
     private final BookService bookService;
     private final ClientService clientService;
+    private final ClientRepository clientRepository;
     private final ConfirmationTokenRepository confirmationTokenRepository;
 
     @GetMapping("/books")
-    public List<BookDto> findAllBooks(){
+    public List<BookDto> findAllBooks() {
         return bookService.findAll();
     }
 
     @GetMapping("/books/{id}")
-    public BookDto findBookById(@PathVariable int id){
+    public BookDto findBookById(@PathVariable int id) {
         return bookService.findById(id);
     }
-
 
 
     @PostMapping("/books")
@@ -45,14 +49,13 @@ public class LibraryController {
         return bookService.save(command);
     }
 
-
     @GetMapping("/clients")
-    public List<ClientDto> findAllClients(){
+    public List<ClientDto> findAllClients() {
         return clientService.findAll();
     }
 
     @GetMapping("/clients/{id}")
-    public ClientDto findClientById(@PathVariable int id){
+    public ClientDto findClientById(@PathVariable int id) {
         return clientService.findById(id);
     }
 
@@ -97,14 +100,13 @@ public class LibraryController {
 
     @GetMapping("/confirm")
     public ResponseEntity confirm(@RequestParam("token") String token) {
-        Optional<ConfirmationToken> optToken = confirmationTokenRepository.findByToken(token);
-        if (optToken.isPresent()) {
-            ConfirmationToken confirmationToken = optToken.get();
-            confirmationToken.getClient().setEnabled(true);
-            confirmationTokenRepository.delete(confirmationToken);
-            return ResponseEntity.ok("Email confirmed!");
-        } else {
-            return ResponseEntity.badRequest().body("Invalid token.");
-        }
+        ConfirmationToken optToken = confirmationTokenRepository.findByToken(token).orElseThrow(
+                () -> new EntityNotFoundException(MessageFormat
+                        .format("Token not found or invalid: {0}", token)));
+        Client client = optToken.getClient();
+        client.setEnabled(true);
+        clientRepository.save(client);
+        confirmationTokenRepository.delete(optToken);
+        return ResponseEntity.ok("Email confirmed!");
     }
 }

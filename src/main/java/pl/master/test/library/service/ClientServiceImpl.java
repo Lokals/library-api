@@ -28,7 +28,7 @@ import java.util.Set;
 @RequiredArgsConstructor
 public class ClientServiceImpl implements ClientService {
 
-    private final BookRepository bookRepository;
+
     private final ClientRepository clientRepository;
     private final RegistrationService registrationService;
     private final ConfirmationTokenRepository confirmationTokenRepository;

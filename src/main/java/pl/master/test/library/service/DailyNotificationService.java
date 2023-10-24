@@ -1,6 +1,7 @@
 package pl.master.test.library.service;
 
 import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.domain.Page;
@@ -8,6 +9,7 @@ import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 import pl.master.test.library.model.Book;
 import pl.master.test.library.model.Client;
 import pl.master.test.library.repository.BookRepository;
@@ -18,50 +20,42 @@ import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
+@RequiredArgsConstructor
 public class DailyNotificationService {
-
-    @Autowired
-    private BookRepository bookRepository;
-
-    @Autowired
-    private RegistrationService registrationService;
-
+    private final BookRepository bookRepository;
+    private final RegistrationService registrationService;
+    private final ClientRepository clientRepository;
 
     @Value("${notification.batch.size}")
     private int batchSize;
 
     @Scheduled(cron = "${scheduled.cron.expression}")
+    @Transactional
     public void sendDailyNotifications() {
         int pageNumber = 0;
-        Page<Book> bookPage;
+        Page<Client> clientPage;
 
         do {
             Pageable pageable = PageRequest.of(pageNumber, batchSize);
-            bookPage = bookRepository.findAllByCreatedDateAfter(LocalDateTime.now().minusDays(1), pageable);
+            clientPage = clientRepository.findAllByEnabledTrueAndSubscriptionsNotEmpty(pageable);
 
-            processBooksBatch(bookPage.getContent());
+            processClientsBatch(clientPage.getContent());
 
             pageNumber++;
-        } while (bookPage.hasNext());
-
+        } while (clientPage.hasNext());
     }
 
-    private void processBooksBatch(List<Book> booksBatch) {
-        Map<String, List<Book>> clientBooksMap = new HashMap<>();
-        for (Book book : booksBatch) {
-            Set<String> interestedClients = bookRepository.findEmailsOfClientsSubscribedToAuthorOrCategory(book.getAuthor(), book.getCategory());
+    private void processClientsBatch(List<Client> clients) {
+        for (Client client : clients) {
+            List<Book> booksOfInterest = bookRepository.findAllByAuthorOrCategoryInAndCreatedDateAfter(
+                    client.getSubscribedAuthors(),
+                    client.getSubscribedCategories(),
+                    LocalDateTime.now().minusDays(1));
 
-            for (String email : interestedClients) {
-                clientBooksMap.computeIfAbsent(email, k -> new ArrayList<>()).add(book);
+            if (!booksOfInterest.isEmpty()) {
+                String notificationMessage = generateNotificationMessage(booksOfInterest);
+                registrationService.newLibraryPosition(client.getEmail(), notificationMessage);
             }
-        }
-        for (Map.Entry<String, List<Book>> entry : clientBooksMap.entrySet()) {
-
-            String clientEmail = entry.getKey();
-            List<Book> books = entry.getValue();
-
-            String notificationMessage = generateNotificationMessage(books);
-            registrationService.newLibraryPosition(clientEmail, notificationMessage);
         }
     }
 

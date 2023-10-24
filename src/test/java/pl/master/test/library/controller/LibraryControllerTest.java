@@ -1,9 +1,11 @@
 package pl.master.test.library.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import lombok.RequiredArgsConstructor;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mock;
 import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
@@ -14,6 +16,7 @@ import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.ResultMatcher;
 import org.springframework.test.web.servlet.result.MockMvcResultMatchers;
+import org.springframework.transaction.annotation.Transactional;
 import pl.master.test.library.model.Book;
 import pl.master.test.library.model.Client;
 import pl.master.test.library.model.command.CreateBookCommand;
@@ -46,22 +49,18 @@ import static org.junit.jupiter.api.Assertions.*;
 
 @SpringBootTest
 @AutoConfigureMockMvc
+@Transactional
 @ActiveProfiles("test")
 class LibraryControllerTest {
 
-
     @Autowired
     private MockMvc mockMvc;
-
     @Autowired
     private BookRepository bookRepository;
-
     @Autowired
     private ClientRepository clientRepository;
-
     @Autowired
     private ClientService clientService;
-
     @Autowired
     private ConfirmationTokenRepository confirmationTokenRepository;
 
@@ -82,6 +81,8 @@ class LibraryControllerTest {
                         .firstName("Wojtek")
                         .lastName("Twardziel")
                         .email("nagrzany@client.com")
+                        .subscribedAuthors(new HashSet<>())
+                        .subscribedCategories(new HashSet<>())
                         .enabled(true)
                         .build()
         );
@@ -118,7 +119,7 @@ class LibraryControllerTest {
 
     @Test
     void testFindBookById_ResultsInAllClientsBeingReturned() throws Exception {
-        mockMvc.perform(get("/api/v1/books/1")
+        mockMvc.perform(get("/api/v1/books/" + book.getId())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.title").value("Fajne"))
@@ -182,7 +183,7 @@ class LibraryControllerTest {
         Client client2 = Client.builder()
                 .firstName("Janczko")
                 .lastName("Darczaka")
-                .email("dupa.sraka@test.com")
+                .email("sraka@test.com")
                 .build();
         clientRepository.save(client2);
 
@@ -233,7 +234,7 @@ class LibraryControllerTest {
         mockMvc.perform(post("/api/v1/books")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(command)))
-                .andDo(print()) 
+                .andDo(print())
                 .andExpect(status().isCreated())
                 .andExpect(MockMvcResultMatchers.content().contentTypeCompatibleWith(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.author").value("Rowling"))
@@ -324,7 +325,7 @@ class LibraryControllerTest {
                 .andExpect(status().isBadRequest())
                 .andExpect(jsonPath("$.message").value("validation errors"))
                 .andExpect(jsonPath("$.violations[0].field").value("email"))
-                .andExpect(jsonPath("$.violations[0].message").value("@Email"));
+                .andExpect(jsonPath("$.violations[0].message").value("must be a well-formed email address"));
     }
 
     @Test
@@ -365,7 +366,7 @@ class LibraryControllerTest {
 
     @Test
     void testSubscribeToCategory_ValidSubscription_ResultsInSuccessfulSubscription() throws Exception {
-        int clientId = 1;
+        int clientId = client.getId();
         UpdateClientSubscriptionCategoryCommand command = new UpdateClientSubscriptionCategoryCommand();
         command.setSubscribedCategory("Horror");
 
@@ -413,8 +414,11 @@ class LibraryControllerTest {
 
     @Test
     void testUnsubscribeFromCategory_ValidUnsubscription_ResultsInSuccessfulUnsubscription() throws Exception {
-        int clientId = 1;
-        client.setSubscribedCategories(Collections.singleton("Horror"));
+        int clientId = client.getId();
+        Set<String> newSubscribedCategories = new HashSet<>(client.getSubscribedCategories());
+        newSubscribedCategories.add("Horror");
+
+        client.setSubscribedCategories(newSubscribedCategories);
         clientRepository.save(client);
         UpdateClientSubscriptionCategoryCommand command = new UpdateClientSubscriptionCategoryCommand();
         command.setSubscribedCategory("Horror");
@@ -465,7 +469,7 @@ class LibraryControllerTest {
     @Test
     void testSubscribeToAuthor_ValidInput_ResultsInAuthorSubscription() throws Exception {
 
-        int clientId = 1;
+        int clientId = client.getId();
         UpdateClientSubscriptionAuthorCommand command = new UpdateClientSubscriptionAuthorCommand();
         command.setSubscribedAuthor("Rowling");
 
@@ -513,8 +517,10 @@ class LibraryControllerTest {
 
     @Test
     void testUnsubscribeFromAuthor_ValidInput_ResultsInAuthorUnsubscription() throws Exception {
-        int clientId = 1;
-        client.setSubscribedAuthors(Collections.singleton("Rowling"));
+        int clientId = client.getId();
+        Set<String> newSubscribedAuthors = new HashSet<>(client.getSubscribedAuthors());
+        newSubscribedAuthors.add("Rowling");
+        client.setSubscribedAuthors(newSubscribedAuthors);
         clientRepository.save(client);
         UpdateClientSubscriptionAuthorCommand command = new UpdateClientSubscriptionAuthorCommand();
         command.setSubscribedAuthor("Rowling");
@@ -564,7 +570,7 @@ class LibraryControllerTest {
 
     @Test
     void testGetSubscribedCategories_ValidClientId_ReturnsListOfCategories() throws Exception {
-        int clientId = 1;
+        int clientId = client.getId();
         Set<String> mockCategories = new HashSet<>(Arrays.asList("Fiction", "Science"));
         client.setSubscribedCategories(mockCategories);
         clientRepository.save(client);
@@ -587,7 +593,7 @@ class LibraryControllerTest {
 
     @Test
     void testGetSubscribedAuthors_ValidClientId_ReturnsListOfAuthors() throws Exception {
-        int clientId = 1;
+        int clientId = client.getId();
         Set<String> mockAuthors = new HashSet<>(Arrays.asList("Rowling", "Shakespeare"));
         client.setSubscribedAuthors(mockAuthors);
         clientRepository.save(client);

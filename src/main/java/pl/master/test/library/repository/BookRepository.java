@@ -38,4 +38,13 @@ public interface BookRepository extends JpaRepository<Book, Integer> {
     Page<Book> findAllByCreatedDateAfter(LocalDateTime date, Pageable pageable);
 
 
+    @Query("SELECT b FROM Book b WHERE " +
+            "(b.author IN :authors OR b.category IN :categories) " +
+            "AND b.createdDate > :date")
+    List<Book> findAllByAuthorOrCategoryInAndCreatedDateAfter(
+            @Param("authors") Set<String> subscribedAuthors,
+            @Param("categories") Set<String> subscribedCategories,
+            @Param("date") LocalDateTime date);
+
+
 }
