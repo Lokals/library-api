@@ -84,7 +84,33 @@ class DailyNotificationServiceTest {
         dailyNotificationService.sendDailyNotifications();
 
         verify(registrationService, times(1)).newLibraryPosition(anyString(), anyString());
+        verify(clientRepository, times(1)).findAllByEnabledTrueAndSubscriptionsNotEmpty(any());
+        verify(bookRepository, times(1)).findAllByAuthorOrCategoryInAndCreatedDateAfter(anySet(), anySet(), any());
     }
 
+    @Test
+    public void testTransactionalBehaviorInScheduledMethod() {
+        Client client = new Client();
+        client.setEmail("test@example.com");
+        client.setFirstName("Test");
+        client.setLastName("Test");
+        client.setEnabled(true);
+        client.setSubscribedAuthors(new HashSet<>(Collections.singleton("Test")));
+        client.setSubscribedCategories(new HashSet<>(Collections.singleton("Test")));
 
+        Book book = new Book();
+        book.setTitle("Test");
+        book.setAuthor("Test");
+        book.setCategory("Test");
+
+        when(clientRepository.findAllByEnabledTrueAndSubscriptionsNotEmpty(any()))
+                .thenReturn(new PageImpl<>(List.of(client)));
+        when(bookRepository.findAllByAuthorOrCategoryInAndCreatedDateAfter(anySet(), anySet(), any()))
+                .thenReturn(List.of(book));
+
+        doThrow(new RuntimeException("Forced Exception"))
+                .when(registrationService).newLibraryPosition(anyString(), anyString());
+
+        assertThrows(RuntimeException.class, () -> dailyNotificationService.sendDailyNotifications());
+    }
 }

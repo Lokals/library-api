@@ -45,7 +45,7 @@ public class DailyNotificationService {
         } while (clientPage.hasNext());
     }
 
-    private void processClientsBatch(List<Client> clients) {
+    public void processClientsBatch(List<Client> clients) {
         for (Client client : clients) {
             List<Book> booksOfInterest = bookRepository.findAllByAuthorOrCategoryInAndCreatedDateAfter(
                     client.getSubscribedAuthors(),
